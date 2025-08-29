@@ -40,7 +40,7 @@ export const singleton = {};
 // Used to avoid running multiple health checks or pool creations at the same time for the same connection
 const poolHealthCheckLocks = {};
 const poolRecreationCounts = {};
-const MAX_POOL_CREATION_RETRIES = 3;
+const MAX_POOL_CREATION_RETRIES = rdsConfig.aurora.mysql.maxPoolCreationRetries;
 const isPoolHealthy = pool =>
   __awaiter(void 0, void 0, void 0, function* () {
     let conn;
@@ -100,7 +100,7 @@ const createAndStoreNewPool = (
           },
           connOptions
         );
-        logger.debug(`${FILE}::CONN_OPTS`, { connOpts });
+        logger.debug(`${FILE}::CONN_OPTS`, { connOpts, connOptions });
         const dbPool = createPool(connOpts);
         singleton[singletonConn] = dbPool;
         poolRecreationCounts[singletonConn] =
@@ -133,6 +133,11 @@ const getClient = (connOptions, clientOpts) =>
       { key: 'dbCredentialsSecretId', type: 'string', required: false },
       { key: 'databaseName', type: 'string', required: false },
     ]);
+    logger.debug(`${FILE}::GET_CLIENT_OPTIONS`, {
+      connOptions,
+      clientOpts,
+      options,
+    });
     const region = options.region || rdsConfig.aurora.mysql.region;
     const singletonConn = options.singletonConn || 'default';
     const dbCredentialsSecretId =
