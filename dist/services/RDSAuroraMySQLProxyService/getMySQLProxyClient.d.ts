@@ -4,5 +4,5 @@ export interface Singleton {
     [key: string]: Pool;
 }
 export declare const singleton: Singleton;
-declare const getClient: (connOptions?: ConnectionOptions, clientOpts?: RDSAuroraMySQLProxyClientOptions) => Promise<Pool>;
-export default getClient;
+declare const getMySQLProxyClient: (connOptions?: ConnectionOptions, clientOpts?: RDSAuroraMySQLProxyClientOptions) => Promise<Pool>;
+export default getMySQLProxyClient;
