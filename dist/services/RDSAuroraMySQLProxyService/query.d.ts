@@ -1,5 +1,3 @@
-import { ConnectionOptions, FieldPacket, QueryResult } from 'mysql2/promise';
 import { RDSAuroraMySQLProxyClientOptions } from '../../types/aws';
-type QueryReturn<T> = [T, FieldPacket[]];
-declare const query: <T = QueryResult>(sql: string, preparedValues?: any[], connOptions?: ConnectionOptions, clientOpts?: RDSAuroraMySQLProxyClientOptions) => Promise<QueryReturn<T>>;
+declare const query: <T = unknown>(sql: string, preparedValues?: any[], connOptions?: Record<string, any>, clientOpts?: RDSAuroraMySQLProxyClientOptions) => Promise<T>;
 export default query;

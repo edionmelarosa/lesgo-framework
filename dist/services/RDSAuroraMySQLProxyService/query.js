@@ -43,13 +43,13 @@ const query = (sql, preparedValues, connOptions, clientOpts) =>
     ]);
     const pool = yield getClient(connOptions, clientOpts);
     try {
-      const resp = yield pool.execute(input.sql, input.preparedValues);
+      const rows = yield pool.query(input.sql, input.preparedValues);
       logger.debug(`${FILE}::RECEIVED_RESPONSE`, {
-        result: resp[0],
+        result: rows,
         sql,
         preparedValues,
       });
-      return resp;
+      return rows;
     } catch (err) {
       throw new LesgoException('Failed to query', `${FILE}::QUERY_ERROR`, 500, {
         err,
