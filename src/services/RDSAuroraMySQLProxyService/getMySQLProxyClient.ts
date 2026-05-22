@@ -1,69 +1,71 @@
-import { Pool, ConnectionOptions, createPool } from 'mysql2/promise';
 import { logger, isEmpty, validateFields } from '../../utils';
 import { getSecretValue } from '../../utils/secretsmanager';
 import { RDSAuroraMySQLProxyClientOptions } from '../../types/aws';
+import { PoolAdapter, DriverAdapter, SupportedDriver } from '../../types/db';
 import { rds as rdsConfig } from '../../config';
+import mysql2Driver from './drivers/mysql2';
+import pgDriver from './drivers/pg';
 
 const FILE = 'lesgo.services.RDSAuroraMySQLProxyService.getMySQLProxyClient';
 
 export interface Singleton {
-  [key: string]: Pool;
+  [key: string]: PoolAdapter;
 }
 
 export const singleton: Singleton = {};
 
-// Used to avoid running multiple health checks or pool creations at the same time for the same connection
-const poolHealthCheckLocks: Record<string, Promise<Pool> | null> = {};
+const poolHealthCheckLocks: Record<string, Promise<PoolAdapter> | null> = {};
 
 const poolRecreationCounts: Record<string, number> = {};
 
 const MAX_POOL_CREATION_RETRIES = rdsConfig.aurora.mysql.maxPoolCreationRetries;
 
-// small helper to pause between retries
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const sanitizeForLogging = <T extends Record<string, any>>(
   obj: T
 ): Partial<T> => {
   if (!obj) return obj;
-
   const sanitized = { ...obj };
-
   delete sanitized.password;
   delete sanitized.user;
-
   return sanitized as Partial<T>;
 };
 
-const isPoolHealthy = async (pool: Pool): Promise<boolean> => {
-  let conn;
+const drivers: Record<SupportedDriver, DriverAdapter> = {
+  mysql2: mysql2Driver,
+  pg: pgDriver,
+};
+
+const resolveDriver = (driver: SupportedDriver): DriverAdapter =>
+  drivers[driver];
+
+const isPoolHealthy = async (pool: PoolAdapter): Promise<boolean> => {
   try {
-    conn = await pool.getConnection();
-    await conn.ping();
+    await pool.ping();
     return true;
   } catch (err) {
-    logger.warn(`${FILE}::POOL_PING_FAILED`, {
-      error: { trace: err },
-    });
+    logger.warn(`${FILE}::POOL_PING_FAILED`, { error: { trace: err } });
     return false;
-  } finally {
-    if (conn) conn.release();
   }
 };
 
 const createAndStoreNewPool = async (
   singletonConn: string,
-  connOptions: ConnectionOptions | undefined,
+  connOptions: Record<string, any> | undefined,
   dbCredentialsSecretId: string | undefined,
   region: string,
-  databaseName: string
-): Promise<Pool> => {
+  databaseName: string,
+  driver: SupportedDriver
+): Promise<PoolAdapter> => {
   const dbCredentials = dbCredentialsSecretId
     ? await getSecretValue(dbCredentialsSecretId, undefined, {
         region,
         singletonConn,
       })
     : {};
+
+  const driverImpl = resolveDriver(driver);
 
   for (let attempt = 1; attempt <= MAX_POOL_CREATION_RETRIES; attempt++) {
     try {
@@ -72,7 +74,7 @@ const createAndStoreNewPool = async (
         database: databaseName,
         port:
           Number(rdsConfig.aurora.mysql.proxy.port || dbCredentials?.port) ||
-          3306,
+          undefined,
         user: dbCredentials?.username || rdsConfig.aurora.mysql.user,
         password: dbCredentials?.password || rdsConfig.aurora.mysql.password,
         connectionLimit:
@@ -86,54 +88,53 @@ const createAndStoreNewPool = async (
       logger.debug(`${FILE}::CONN_OPTS`, {
         connOpts: sanitizeForLogging(connOpts),
         connOptions: sanitizeForLogging(connOptions || {}),
+        driver,
       });
 
-      const dbPool = createPool({
-        ...connOpts,
-      });
+      const pool = driverImpl.createPool(connOpts);
 
-      singleton[singletonConn] = dbPool;
+      singleton[singletonConn] = pool;
       poolRecreationCounts[singletonConn] =
         (poolRecreationCounts[singletonConn] || 0) + 1;
 
       logger.debug(`${FILE}::NEW_RDS_CONNECTION`, {
         attempt,
         recreatedCount: poolRecreationCounts[singletonConn],
+        driver,
       });
 
-      return dbPool;
+      return pool;
     } catch (err) {
       logger.warn(`${FILE}::POOL_CREATION_RETRY_FAILED`, {
         attempt,
         error: { trace: err },
       });
 
-      // short exponential backoff before retrying
       if (attempt < MAX_POOL_CREATION_RETRIES) {
         const delay = Math.min(1000, 100 * 2 ** (attempt - 1));
         logger.debug(`${FILE}::POOL_CREATION_BACKOFF`, { attempt, delay });
         await sleep(delay);
       } else {
         throw new Error(
-          `Failed to create MySQL pool after ${MAX_POOL_CREATION_RETRIES} attempts`
+          `Failed to create pool after ${MAX_POOL_CREATION_RETRIES} attempts`
         );
       }
     }
   }
 
-  // Should not reach
   throw new Error(`${FILE}::UNEXPECTED_POOL_CREATION_FAILURE`);
 };
 
 const getClient = async (
-  connOptions?: ConnectionOptions,
+  connOptions?: Record<string, any>,
   clientOpts?: RDSAuroraMySQLProxyClientOptions
-): Promise<Pool> => {
+): Promise<PoolAdapter> => {
   const options = validateFields(clientOpts || {}, [
     { key: 'region', type: 'string', required: false },
     { key: 'singletonConn', type: 'string', required: false },
     { key: 'dbCredentialsSecretId', type: 'string', required: false },
     { key: 'databaseName', type: 'string', required: false },
+    { key: 'driver', type: 'string', required: false },
   ]);
 
   logger.debug(`${FILE}::GET_CLIENT_OPTIONS`, {
@@ -149,6 +150,7 @@ const getClient = async (
     rdsConfig.aurora.mysql.proxy.dbCredentialsSecretId;
   const databaseName =
     options.databaseName || rdsConfig.aurora.mysql.databaseName;
+  const driver: SupportedDriver = (clientOpts?.driver as SupportedDriver) || 'mysql2';
 
   if (!databaseName) {
     throw new Error(`${FILE}::DATABASE_NAME_NOT_PROVIDED`);
@@ -179,7 +181,8 @@ const getClient = async (
             connOptions,
             dbCredentialsSecretId,
             region,
-            databaseName
+            databaseName,
+            driver
           );
         } finally {
           poolHealthCheckLocks[singletonConn] = null;
@@ -189,8 +192,6 @@ const getClient = async (
       logger.debug(`${FILE}::REUSE_RDS_CONNECTION (from lock)`);
     }
 
-    // Capture the reference before awaiting so concurrent callers hold a stable
-    // Promise even after finally nulls the shared slot.
     const lockRef = poolHealthCheckLocks[singletonConn];
     const result = await lockRef;
 
@@ -205,7 +206,8 @@ const getClient = async (
     connOptions,
     dbCredentialsSecretId,
     region,
-    databaseName
+    databaseName,
+    driver
   );
 };
 

@@ -1,4 +1,3 @@
-import { ConnectionOptions, FieldPacket, QueryResult } from 'mysql2/promise';
 import { logger, validateFields } from '../../utils';
 import { RDSAuroraMySQLProxyClientOptions } from '../../types/aws';
 import { LesgoException } from '../../exceptions';
@@ -6,16 +5,12 @@ import getClient from './getMySQLProxyClient';
 
 const FILE = 'lesgo.services.RDSAuroraMySQLService.query';
 
-type QueryResultType<T> = T extends QueryResult ? T : never;
-
-type QueryReturn<T> = [T, FieldPacket[]];
-
-const query = async <T = QueryResult>(
+const query = async <T = unknown>(
   sql: string,
   preparedValues?: any[],
-  connOptions?: ConnectionOptions,
+  connOptions?: Record<string, any>,
   clientOpts?: RDSAuroraMySQLProxyClientOptions
-): Promise<QueryReturn<T>> => {
+): Promise<T> => {
   const input = validateFields({ sql, preparedValues }, [
     { key: 'sql', type: 'string', required: true },
     { key: 'preparedValues', type: 'array', required: false },
@@ -24,17 +19,14 @@ const query = async <T = QueryResult>(
   const pool = await getClient(connOptions, clientOpts);
 
   try {
-    const resp = await pool.execute<QueryResultType<T>>(
-      input.sql,
-      input.preparedValues
-    );
+    const rows = await pool.query<T>(input.sql, input.preparedValues);
     logger.debug(`${FILE}::RECEIVED_RESPONSE`, {
-      result: resp[0],
+      result: rows,
       sql,
       preparedValues,
     });
 
-    return resp;
+    return rows;
   } catch (err) {
     throw new LesgoException('Failed to query', `${FILE}::QUERY_ERROR`, 500, {
       err,

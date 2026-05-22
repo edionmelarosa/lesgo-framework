@@ -1,21 +1,13 @@
-import { ConnectionOptions } from 'mysql2/promise';
 import queryService from '../../../../services/RDSAuroraMySQLProxyService/query';
 import { RDSAuroraMySQLProxyClientOptions } from '../../../../types/aws';
 
 const query = async <T>(
   sql: string,
   preparedValues?: any[],
-  connOptions?: ConnectionOptions,
+  connOptions?: Record<string, any>,
   clientOpts?: RDSAuroraMySQLProxyClientOptions
 ) => {
-  const [res] = await queryService<T>(
-    sql,
-    preparedValues,
-    connOptions,
-    clientOpts
-  );
-
-  return res;
+  return queryService<T>(sql, preparedValues, connOptions, clientOpts);
 };
 
 export default query;
