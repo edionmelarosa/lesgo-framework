@@ -134,7 +134,6 @@ const getClient = (connOptions, clientOpts) =>
     const options = validateFields(clientOpts || {}, [
       { key: 'singletonConn', type: 'string', required: false },
       { key: 'databaseName', type: 'string', required: false },
-      { key: 'driver', type: 'string', required: false },
     ]);
     logger.debug(`${FILE}::GET_CLIENT_OPTIONS`, {
       connOptions: sanitizeForLogging(connOptions || {}),
@@ -148,9 +147,9 @@ const getClient = (connOptions, clientOpts) =>
         ? void 0
         : connOptions.database);
     const driver =
-      (clientOpts === null || clientOpts === void 0
+      (connOptions === null || connOptions === void 0
         ? void 0
-        : clientOpts.driver) || 'mysql2';
+        : connOptions.driver) || 'mysql2';
     if (!isEmpty(singleton[singletonConn])) {
       if (!poolHealthCheckLocks[singletonConn]) {
         poolHealthCheckLocks[singletonConn] = (() =>
@@ -183,12 +182,13 @@ const getClient = (connOptions, clientOpts) =>
       } else {
         logger.debug(`${FILE}::REUSE_RDS_CONNECTION (from lock)`);
       }
+      // Capture lockRef before the finally block can clear poolHealthCheckLocks[singletonConn]
       const lockRef = poolHealthCheckLocks[singletonConn];
-      const result = yield lockRef;
-      if (!result) {
-        throw new Error(`${FILE}::Pool health check lock failed unexpectedly`);
+      if (!lockRef) {
+        // Lock completed synchronously before we could capture it; pool is in singleton
+        return singleton[singletonConn];
       }
-      return result;
+      return yield lockRef;
     }
     return yield createAndStoreNewPool(
       singletonConn,

@@ -175,13 +175,13 @@ const getClient = async (
       logger.debug(`${FILE}::REUSE_RDS_CONNECTION (from lock)`);
     }
 
+    // Capture lockRef before the finally block can clear poolHealthCheckLocks[singletonConn]
     const lockRef = poolHealthCheckLocks[singletonConn];
-    const result = await lockRef;
-
-    if (!result) {
-      throw new Error(`${FILE}::Pool health check lock failed unexpectedly`);
+    if (!lockRef) {
+      // Lock completed synchronously before we could capture it; pool is in singleton
+      return singleton[singletonConn];
     }
-    return result;
+    return await lockRef;
   }
 
   return await createAndStoreNewPool(
