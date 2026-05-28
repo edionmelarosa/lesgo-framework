@@ -1,3 +1,3 @@
-import { RDSAuroraMySQLProxyClientOptions } from '../../../../types/aws';
-declare const getClient: (connOptions?: Record<string, any>, clientOpts?: RDSAuroraMySQLProxyClientOptions) => Promise<import("../../../../types/db").PoolAdapter>;
+import { RDSAuroraProxyClientOptions } from '../../../../types/aws';
+declare const getClient: (connOptions?: Record<string, any>, clientOpts?: RDSAuroraProxyClientOptions) => Promise<import("../../../../types/db").PoolAdapter>;
 export default getClient;

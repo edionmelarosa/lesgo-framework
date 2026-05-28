@@ -1,4 +1,4 @@
-import getClientService from '../../../../services/RDSAuroraMySQLProxyService/getMySQLProxyClient';
+import getClientService from '../../../../services/RDSAuroraProxyService/getProxyClient';
 const getClient = (connOptions, clientOpts) => {
   return getClientService(connOptions, clientOpts);
 };

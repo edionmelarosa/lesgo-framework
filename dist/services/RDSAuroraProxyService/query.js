@@ -31,9 +31,33 @@ var __awaiter =
       step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
   };
-import queryService from '../../../../services/RDSAuroraProxyService/query';
+import { logger, validateFields } from '../../utils';
+import { LesgoException } from '../../exceptions';
+import getClient from './getProxyClient';
+const FILE = 'lesgo.services.RDSAuroraProxyService.query';
 const query = (sql, preparedValues, connOptions, clientOpts) =>
   __awaiter(void 0, void 0, void 0, function* () {
-    return queryService(sql, preparedValues, connOptions, clientOpts);
+    const input = validateFields({ sql, preparedValues }, [
+      { key: 'sql', type: 'string', required: true },
+      { key: 'preparedValues', type: 'array', required: false },
+    ]);
+    const pool = yield getClient(connOptions, clientOpts);
+    try {
+      const rows = yield pool.query(input.sql, input.preparedValues);
+      logger.debug(`${FILE}::RECEIVED_RESPONSE`, {
+        result: rows,
+        sql,
+        preparedValues,
+      });
+      return rows;
+    } catch (err) {
+      throw new LesgoException('Failed to query', `${FILE}::QUERY_ERROR`, 500, {
+        err,
+        sql,
+        preparedValues,
+        connOptions,
+        clientOpts,
+      });
+    }
   });
 export default query;

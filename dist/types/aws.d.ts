@@ -3,7 +3,7 @@ export interface ClientOptions {
     region?: string;
     singletonConn?: string;
 }
-export interface RDSAuroraMySQLProxyClientOptions {
+export interface RDSAuroraProxyClientOptions {
     singletonConn?: string;
     databaseName?: string;
     driver?: SupportedDriver;
