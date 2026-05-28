@@ -6,11 +6,17 @@ export interface QueryConfig {
   [key: string]: any;
 }
 
+export interface QueryResult<T = unknown> {
+  rows: T[];
+  fields?: any[];
+  rowCount?: number | null;
+}
+
 export interface PoolAdapter {
   query<T = unknown>(
     sql: string | QueryConfig,
     values?: any[]
-  ): Promise<[T[], any[]]>;
+  ): Promise<[T[], any[]] | QueryResult<T>>;
   ping(): Promise<void>;
   end(): Promise<void>;
 }

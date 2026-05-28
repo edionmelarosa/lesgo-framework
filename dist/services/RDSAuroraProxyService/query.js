@@ -43,7 +43,8 @@ const query = (sql, preparedValues, connOptions, clientOpts) =>
     ]);
     const pool = yield getClient(connOptions, clientOpts);
     try {
-      const [rows] = yield pool.query(input.sql, input.preparedValues);
+      const result = yield pool.query(input.sql, input.preparedValues);
+      const rows = Array.isArray(result) ? result[0] : result.rows;
       logger.debug(`${FILE}::RECEIVED_RESPONSE`, {
         rows,
         sql,

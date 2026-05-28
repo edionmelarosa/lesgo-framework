@@ -20,7 +20,8 @@ const query = async <T = unknown>(
   const pool = await getClient(connOptions, clientOpts);
 
   try {
-    const [rows] = await pool.query<T>(input.sql, input.preparedValues);
+    const result = await pool.query<T>(input.sql, input.preparedValues);
+    const rows = Array.isArray(result) ? result[0] : result.rows;
     logger.debug(`${FILE}::RECEIVED_RESPONSE`, {
       rows,
       sql,
