@@ -1,5 +1,5 @@
 import { createPool as mysql2CreatePool } from 'mysql2/promise';
-import { DriverAdapter, Mysql2PoolConnOptions, PoolAdapter, QueryConfig, QueryResult } from '../../../types/db';
+import { DriverAdapter, Mysql2PoolConnOptions, PoolAdapter, QueryConfig } from '../../../types/db';
 
 class Mysql2PoolAdapter implements PoolAdapter {
   private pool: ReturnType<typeof mysql2CreatePool>;
@@ -11,11 +11,11 @@ class Mysql2PoolAdapter implements PoolAdapter {
   async query<T = unknown>(
     sql: string | QueryConfig,
     values?: any[]
-  ): Promise<QueryResult<T>> {
+  ): Promise<[T[], any[]]> {
     const sqlStr = typeof sql === 'object' ? (sql.sql ?? sql.text ?? '') : sql;
     const vals = typeof sql === 'object' ? sql.values : values;
     const [rows, fields] = await this.pool.execute(sqlStr, vals);
-    return { rows: rows as T[], fields: fields as any[] };
+    return [rows as T[], fields as any[]];
   }
 
   async ping(): Promise<void> {

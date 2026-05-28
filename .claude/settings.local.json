@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Skill(reflex-dev-coding-kit:commit)",
-      "Skill(reflex-dev-coding-kit:commit:*)"
+      "Skill(reflex-dev-coding-kit:commit:*)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
