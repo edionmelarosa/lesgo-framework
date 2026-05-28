@@ -38,16 +38,10 @@ class Mysql2PoolAdapter {
   }
   query(sql, values) {
     return __awaiter(this, void 0, void 0, function* () {
-      var _a, _b;
-      const sqlStr =
+      const [rows, fields] =
         typeof sql === 'object'
-          ? (_b = (_a = sql.sql) !== null && _a !== void 0 ? _a : sql.text) !==
-              null && _b !== void 0
-            ? _b
-            : ''
-          : sql;
-      const vals = typeof sql === 'object' ? sql.values : values;
-      const [rows, fields] = yield this.pool.query(sqlStr, vals);
+          ? yield this.pool.query(sql)
+          : yield this.pool.query(sql, values);
       return [rows, fields];
     });
   }
