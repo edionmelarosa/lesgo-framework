@@ -1,8 +1,8 @@
 import { getClient } from '../../proxy';
-import getMySQLProxyClient from '../../../../../services/RDSAuroraMySQLProxyService/getMySQLProxyClient';
+import getProxyClient from '../../../../../services/RDSAuroraProxyService/getProxyClient';
 
 jest.mock(
-  '../../../../../services/RDSAuroraMySQLProxyService/getMySQLProxyClient'
+  '../../../../../services/RDSAuroraProxyService/getProxyClient'
 );
 
 describe('getClient', () => {
@@ -17,46 +17,46 @@ describe('getClient', () => {
     jest.clearAllMocks();
   });
 
-  it('should call getMySQLProxyClient with the correct parameters', () => {
+  it('should call getProxyClient with the correct parameters', () => {
     const singletonConn = 'default';
 
     getClient(connOptions, { singletonConn });
 
-    expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
-    expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, {
+    expect(getProxyClient).toHaveBeenCalledTimes(1);
+    expect(getProxyClient).toHaveBeenCalledWith(connOptions, {
       singletonConn,
     });
   });
 
-  it('should call getMySQLProxyClient with default connOptions, singletonConn if not provided', () => {
+  it('should call getProxyClient with default connOptions, singletonConn if not provided', () => {
     getClient(connOptions, {});
 
-    expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
-    expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, {});
+    expect(getProxyClient).toHaveBeenCalledTimes(1);
+    expect(getProxyClient).toHaveBeenCalledWith(connOptions, {});
   });
 
-  it('should call getMySQLProxyClient with default connOptions, driver if provided', () => {
+  it('should call getProxyClient with default connOptions, driver if provided', () => {
     const singletonConn = 'default';
 
     getClient(connOptions, { singletonConn });
 
-    expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
-    expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, {
+    expect(getProxyClient).toHaveBeenCalledTimes(1);
+    expect(getProxyClient).toHaveBeenCalledWith(connOptions, {
       singletonConn,
     });
   });
 
-  it('should call getMySQLProxyClient with default connOptions, singletonConn and region if not provided', () => {
+  it('should call getProxyClient with default connOptions, singletonConn and region if not provided', () => {
     getClient();
 
-    expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
-    expect(getMySQLProxyClient).toHaveBeenCalledWith(undefined, undefined);
+    expect(getProxyClient).toHaveBeenCalledTimes(1);
+    expect(getProxyClient).toHaveBeenCalledWith(undefined, undefined);
   });
 
-  it('should call getMySQLProxyClient with default connOptions, singletonConn and region if empty object provided', () => {
+  it('should call getProxyClient with default connOptions, singletonConn and region if empty object provided', () => {
     getClient({});
 
-    expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
-    expect(getMySQLProxyClient).toHaveBeenCalledWith({}, undefined);
+    expect(getProxyClient).toHaveBeenCalledTimes(1);
+    expect(getProxyClient).toHaveBeenCalledWith({}, undefined);
   });
 });

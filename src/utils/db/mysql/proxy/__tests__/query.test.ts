@@ -1,7 +1,7 @@
 import { query } from '../../proxy';
-import queryService from '../../../../../services/RDSAuroraMySQLProxyService/query';
+import queryService from '../../../../../services/RDSAuroraProxyService/query';
 
-jest.mock('../../../../../services/RDSAuroraMySQLProxyService/query');
+jest.mock('../../../../../services/RDSAuroraProxyService/query');
 
 describe('query', () => {
   const connOptions = {

@@ -1,12 +1,11 @@
 import { logger } from '../../utils';
 
-const FILE =
-  'lesgo.services.RDSAuroraMySQLProxyService.disconnectMySQLProxyClient';
+const FILE = 'lesgo.services.RDSAuroraProxyService.disconnectProxyClient';
 
 /**
  * @deprecated Disconnect db is no longer to be used due to the use of ConnectionPool
  */
-const disconnectMySQLProxyClient = async () => {
+const disconnectProxyClient = async () => {
   logger.warn(`${FILE}::DEPRECATED_FUNCTION_DO_NOT_END_POOL_CONNECTION`);
 
   // const singletonConns = Object.keys(singleton);
@@ -30,4 +29,4 @@ const disconnectMySQLProxyClient = async () => {
   // });
 };
 
-export default disconnectMySQLProxyClient;
+export default disconnectProxyClient;

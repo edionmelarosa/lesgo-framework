@@ -1,8 +1,8 @@
 import { LesgoException } from '../../../exceptions';
-import getMySQLProxyClient from '../getMySQLProxyClient';
-import { query } from '../../RDSAuroraMySQLProxyService';
+import getProxyClient from '../getProxyClient';
+import { query } from '../../RDSAuroraProxyService';
 
-jest.mock('../getMySQLProxyClient');
+jest.mock('../getProxyClient');
 
 describe('query', () => {
   afterEach(() => {
@@ -24,11 +24,11 @@ describe('query', () => {
     const connectionMock = {
       query: jest.fn().mockResolvedValue([{ id: 1, name: 'John' }]),
     };
-    (getMySQLProxyClient as jest.Mock).mockResolvedValue(connectionMock);
+    (getProxyClient as jest.Mock).mockResolvedValue(connectionMock);
 
     await query(sql, preparedValues, connOptions, clientOpts);
 
-    expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, clientOpts);
+    expect(getProxyClient).toHaveBeenCalledWith(connOptions, clientOpts);
   });
 
   it('should execute the query and return the response', async () => {
@@ -38,7 +38,7 @@ describe('query', () => {
     const connectionMock = {
       query: jest.fn().mockResolvedValue(rows),
     };
-    (getMySQLProxyClient as jest.Mock).mockResolvedValue(connectionMock);
+    (getProxyClient as jest.Mock).mockResolvedValue(connectionMock);
 
     const resp = await query(sql, preparedValues);
 
@@ -62,14 +62,14 @@ describe('query', () => {
     const connectionMock = {
       query: jest.fn().mockRejectedValue(error),
     };
-    (getMySQLProxyClient as jest.Mock).mockResolvedValue(connectionMock);
+    (getProxyClient as jest.Mock).mockResolvedValue(connectionMock);
 
     await expect(
       query(sql, preparedValues, connOptions, clientOpts)
     ).rejects.toThrow(
       new LesgoException(
         'Failed to query',
-        'lesgo.services.RDSAuroraMySQLService.query::QUERY_ERROR',
+        'lesgo.services.RDSAuroraProxyService.query::QUERY_ERROR',
         500,
         {
           err: error,

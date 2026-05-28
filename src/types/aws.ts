@@ -5,7 +5,7 @@ export interface ClientOptions {
   singletonConn?: string;
 }
 
-export interface RDSAuroraMySQLProxyClientOptions {
+export interface RDSAuroraProxyClientOptions {
   singletonConn?: string;
   databaseName?: string;
   driver?: SupportedDriver;

@@ -1,15 +1,15 @@
 import { logger, validateFields } from '../../utils';
-import { RDSAuroraMySQLProxyClientOptions } from '../../types/aws';
+import { RDSAuroraProxyClientOptions } from '../../types/aws';
 import { LesgoException } from '../../exceptions';
-import getClient from './getMySQLProxyClient';
+import getClient from './getProxyClient';
 
-const FILE = 'lesgo.services.RDSAuroraMySQLService.query';
+const FILE = 'lesgo.services.RDSAuroraProxyService.query';
 
 const query = async <T = unknown>(
   sql: string,
   preparedValues?: any[],
   connOptions?: Record<string, any>,
-  clientOpts?: RDSAuroraMySQLProxyClientOptions
+  clientOpts?: RDSAuroraProxyClientOptions
 ): Promise<T> => {
   const input = validateFields({ sql, preparedValues }, [
     { key: 'sql', type: 'string', required: true },

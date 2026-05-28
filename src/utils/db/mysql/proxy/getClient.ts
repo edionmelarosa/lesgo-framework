@@ -1,9 +1,9 @@
-import getClientService from '../../../../services/RDSAuroraMySQLProxyService/getMySQLProxyClient';
-import { RDSAuroraMySQLProxyClientOptions } from '../../../../types/aws';
+import getClientService from '../../../../services/RDSAuroraProxyService/getProxyClient';
+import { RDSAuroraProxyClientOptions } from '../../../../types/aws';
 
 const getClient = (
   connOptions?: Record<string, any>,
-  clientOpts?: RDSAuroraMySQLProxyClientOptions
+  clientOpts?: RDSAuroraProxyClientOptions
 ) => {
   return getClientService(connOptions, clientOpts);
 };

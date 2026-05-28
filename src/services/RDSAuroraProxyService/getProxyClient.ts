@@ -1,10 +1,10 @@
 import { logger, isEmpty, validateFields } from '../../utils';
-import { RDSAuroraMySQLProxyClientOptions } from '../../types/aws';
+import { RDSAuroraProxyClientOptions } from '../../types/aws';
 import { PoolAdapter, DriverAdapter, SupportedDriver } from '../../types/db';
 import mysql2Driver from './drivers/mysql2';
 import pgDriver from './drivers/pg';
 
-const FILE = 'lesgo.services.RDSAuroraMySQLProxyService.getMySQLProxyClient';
+const FILE = 'lesgo.services.RDSAuroraProxyService.getProxyClient';
 
 export interface Singleton {
   [key: string]: PoolAdapter;
@@ -118,7 +118,7 @@ const createAndStoreNewPool = async (
 
 const getClient = async (
   connOptions?: Record<string, any>,
-  clientOpts?: RDSAuroraMySQLProxyClientOptions
+  clientOpts?: RDSAuroraProxyClientOptions
 ): Promise<PoolAdapter> => {
   const options = validateFields(clientOpts || {}, [
     { key: 'singletonConn', type: 'string', required: false },
