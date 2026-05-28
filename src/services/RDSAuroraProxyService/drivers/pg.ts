@@ -1,5 +1,5 @@
 import { Pool as PgPool } from 'pg';
-import { DriverAdapter, PoolAdapter, PoolConnOptions, QueryConfig } from '../../../types/db';
+import { DriverAdapter, PoolAdapter, PoolConnOptions, QueryConfig, QueryResult } from '../../../types/db';
 
 class PgPoolAdapter implements PoolAdapter {
   private pool: PgPool;
@@ -8,12 +8,15 @@ class PgPoolAdapter implements PoolAdapter {
     this.pool = pool;
   }
 
-  async query<T = unknown>(sql: string | QueryConfig, values?: any[]): Promise<T> {
+  async query<T = unknown>(
+    sql: string | QueryConfig,
+    values?: any[]
+  ): Promise<QueryResult<T>> {
     const result =
       typeof sql === 'object'
         ? await this.pool.query(sql as any)
         : await this.pool.query(sql, values);
-    return result.rows as T;
+    return { rows: result.rows as T[], fields: result.fields, rowCount: result.rowCount };
   }
 
   async ping(): Promise<void> {

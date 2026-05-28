@@ -19,14 +19,14 @@ const query = async <T = unknown>(
   const pool = await getClient(connOptions, clientOpts);
 
   try {
-    const rows = await pool.query<T>(input.sql, input.preparedValues);
+    const result = await pool.query<T>(input.sql, input.preparedValues);
     logger.debug(`${FILE}::RECEIVED_RESPONSE`, {
-      result: rows,
+      result,
       sql,
       preparedValues,
     });
 
-    return rows;
+    return result.rows as unknown as T;
   } catch (err) {
     throw new LesgoException('Failed to query', `${FILE}::QUERY_ERROR`, 500, {
       err,
