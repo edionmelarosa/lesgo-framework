@@ -47,7 +47,7 @@ class Mysql2PoolAdapter {
             : ''
           : sql;
       const vals = typeof sql === 'object' ? sql.values : values;
-      const [rows, fields] = yield this.pool.execute(sqlStr, vals);
+      const [rows, fields] = yield this.pool.query(sqlStr, vals);
       return [rows, fields];
     });
   }
