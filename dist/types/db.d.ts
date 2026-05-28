@@ -26,6 +26,7 @@ export interface PoolConnOptions {
     connectionLimit?: number;
     waitForConnections?: boolean;
     queueLimit?: number;
+    maxPoolCreationRetries?: number;
     [key: string]: any;
 }
 export type SupportedDriver = 'mysql2' | 'pg';
