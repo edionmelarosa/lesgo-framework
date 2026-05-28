@@ -129,7 +129,6 @@ const getClient = async (
   const options = validateFields(clientOpts || {}, [
     { key: 'singletonConn', type: 'string', required: false },
     { key: 'databaseName', type: 'string', required: false },
-    { key: 'driver', type: 'string', required: false },
   ]);
 
   logger.debug(`${FILE}::GET_CLIENT_OPTIONS`, {
@@ -140,8 +139,7 @@ const getClient = async (
 
   const singletonConn = options.singletonConn || 'default';
   const databaseName = options.databaseName || connOptions?.database;
-  const driver: SupportedDriver =
-    (clientOpts?.driver as SupportedDriver) || 'mysql2';
+  const driver: SupportedDriver = connOptions?.driver || 'mysql2';
 
   if (!isEmpty(singleton[singletonConn])) {
     if (!poolHealthCheckLocks[singletonConn]) {
