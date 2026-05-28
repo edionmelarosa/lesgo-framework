@@ -1,5 +1,6 @@
 export interface QueryConfig {
-    text: string;
+    text?: string;
+    sql?: string;
     values?: any[];
     rowMode?: string;
     [key: string]: any;

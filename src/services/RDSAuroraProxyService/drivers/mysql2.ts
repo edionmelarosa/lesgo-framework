@@ -12,7 +12,7 @@ class Mysql2PoolAdapter implements PoolAdapter {
     sql: string | QueryConfig,
     values?: any[]
   ): Promise<QueryResult<T>> {
-    const sqlStr = typeof sql === 'object' ? sql.text : sql;
+    const sqlStr = typeof sql === 'object' ? (sql.sql ?? sql.text ?? '') : sql;
     const vals = typeof sql === 'object' ? sql.values : values;
     const [rows, fields] = await this.pool.execute(sqlStr, vals);
     return { rows: rows as T[], fields: fields as any[] };
