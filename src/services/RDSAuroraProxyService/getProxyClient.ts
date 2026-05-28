@@ -1,6 +1,11 @@
 import { logger, isEmpty, validateFields } from '../../utils';
 import { RDSAuroraProxyClientOptions } from '../../types/aws';
-import { PoolAdapter, DriverAdapter, SupportedDriver } from '../../types/db';
+import {
+  PoolAdapter,
+  DriverAdapter,
+  SupportedDriver,
+  PoolConnOptions,
+} from '../../types/db';
 import mysql2Driver from './drivers/mysql2';
 import pgDriver from './drivers/pg';
 
@@ -50,8 +55,8 @@ const isPoolHealthy = async (pool: PoolAdapter): Promise<boolean> => {
 
 const createAndStoreNewPool = async (
   singletonConn: string,
-  connOptions: Record<string, any> | undefined,
-  databaseName: string,
+  connOptions: PoolConnOptions | undefined,
+  databaseName: string | undefined,
   driver: SupportedDriver
 ): Promise<PoolAdapter> => {
   const driverImpl = resolveDriver(driver);
@@ -60,7 +65,7 @@ const createAndStoreNewPool = async (
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const connOpts: Record<string, any> = {
+      const connOpts: PoolConnOptions = {
         ...connOptions,
         database: databaseName || connOptions?.database,
       };
@@ -117,7 +122,7 @@ const createAndStoreNewPool = async (
 };
 
 const getClient = async (
-  connOptions?: Record<string, any>,
+  connOptions?: PoolConnOptions,
   clientOpts?: RDSAuroraProxyClientOptions
 ): Promise<PoolAdapter> => {
   const options = validateFields(clientOpts || {}, [

@@ -33,6 +33,7 @@ export interface PoolConnOptions {
   connectionLimit?: number;
   waitForConnections?: boolean;
   queueLimit?: number;
+  maxPoolCreationRetries?: number;
   [key: string]: any;
 }
 

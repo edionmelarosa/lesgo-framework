@@ -1,6 +1,7 @@
 import { logger, validateFields } from '../../utils';
 import { RDSAuroraProxyClientOptions } from '../../types/aws';
 import { LesgoException } from '../../exceptions';
+import { PoolConnOptions } from '../../types/db';
 import getClient from './getProxyClient';
 
 const FILE = 'lesgo.services.RDSAuroraProxyService.query';
@@ -8,7 +9,7 @@ const FILE = 'lesgo.services.RDSAuroraProxyService.query';
 const query = async <T = unknown>(
   sql: string,
   preparedValues?: any[],
-  connOptions?: Record<string, any>,
+  connOptions?: PoolConnOptions,
   clientOpts?: RDSAuroraProxyClientOptions
 ): Promise<T> => {
   const input = validateFields({ sql, preparedValues }, [
