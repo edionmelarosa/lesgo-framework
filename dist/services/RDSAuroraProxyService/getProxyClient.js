@@ -84,6 +84,7 @@ const createAndStoreNewPool = (
             (connOptions === null || connOptions === void 0
               ? void 0
               : connOptions.database),
+          driver,
         });
         if (!connOpts.host) {
           throw new Error(`${FILE}::HOST_NOT_PROVIDED`);

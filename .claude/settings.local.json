@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(reflex-dev-coding-kit:commit)",
+      "Skill(reflex-dev-coding-kit:commit:*)"
+    ]
+  }
+}

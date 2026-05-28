@@ -17,16 +17,25 @@ export interface PoolAdapter {
 export interface DriverAdapter {
     createPool(connOpts: PoolConnOptions): PoolAdapter;
 }
-export interface PoolConnOptions {
+interface BasePoolConnOptions {
     host?: string;
     port?: number;
     database?: string;
     user?: string;
     password?: string;
-    connectionLimit?: number;
-    waitForConnections?: boolean;
-    queueLimit?: number;
     maxPoolCreationRetries?: number;
     [key: string]: any;
 }
+export interface Mysql2PoolConnOptions extends BasePoolConnOptions {
+    driver: 'mysql2';
+    connectionLimit?: number;
+    waitForConnections?: boolean;
+    queueLimit?: number;
+}
+export interface PgPoolConnOptions extends BasePoolConnOptions {
+    driver: 'pg';
+    max?: number;
+}
+export type PoolConnOptions = Mysql2PoolConnOptions | PgPoolConnOptions;
 export type SupportedDriver = 'mysql2' | 'pg';
+export {};

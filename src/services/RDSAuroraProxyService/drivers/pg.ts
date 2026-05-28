@@ -1,5 +1,5 @@
 import { Pool as PgPool } from 'pg';
-import { DriverAdapter, PoolAdapter, PoolConnOptions, QueryConfig, QueryResult } from '../../../types/db';
+import { DriverAdapter, PgPoolConnOptions, PoolAdapter, QueryConfig, QueryResult } from '../../../types/db';
 
 class PgPoolAdapter implements PoolAdapter {
   private pool: PgPool;
@@ -34,7 +34,7 @@ class PgPoolAdapter implements PoolAdapter {
 }
 
 const pgDriver: DriverAdapter = {
-  createPool(connOpts: PoolConnOptions): PoolAdapter {
+  createPool(connOpts: PgPoolConnOptions): PoolAdapter {
     const pool = new PgPool({
       host: connOpts.host,
       port: connOpts.port ?? 5432,

@@ -68,6 +68,7 @@ const createAndStoreNewPool = async (
       const connOpts: PoolConnOptions = {
         ...connOptions,
         database: databaseName || connOptions?.database,
+        driver,
       };
 
       if (!connOpts.host) {

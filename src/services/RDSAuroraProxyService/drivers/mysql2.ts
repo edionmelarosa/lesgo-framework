@@ -1,5 +1,5 @@
 import { createPool as mysql2CreatePool } from 'mysql2/promise';
-import { DriverAdapter, PoolAdapter, PoolConnOptions, QueryConfig, QueryResult } from '../../../types/db';
+import { DriverAdapter, Mysql2PoolConnOptions, PoolAdapter, QueryConfig, QueryResult } from '../../../types/db';
 
 class Mysql2PoolAdapter implements PoolAdapter {
   private pool: ReturnType<typeof mysql2CreatePool>;
@@ -33,7 +33,7 @@ class Mysql2PoolAdapter implements PoolAdapter {
 }
 
 const mysql2Driver: DriverAdapter = {
-  createPool(connOpts: PoolConnOptions): PoolAdapter {
+  createPool(connOpts: Mysql2PoolConnOptions): PoolAdapter {
     const pool = mysql2CreatePool({
       host: connOpts.host,
       port: connOpts.port ?? 3306,
