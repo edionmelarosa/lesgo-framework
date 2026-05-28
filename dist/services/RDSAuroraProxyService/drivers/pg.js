@@ -42,7 +42,11 @@ class PgPoolAdapter {
         typeof sql === 'object'
           ? yield this.pool.query(sql)
           : yield this.pool.query(sql, values);
-      return result.rows;
+      return {
+        rows: result.rows,
+        fields: result.fields,
+        rowCount: result.rowCount,
+      };
     });
   }
   ping() {
