@@ -32,15 +32,13 @@ var __awaiter =
     });
   };
 import { logger, isEmpty, validateFields } from '../../utils';
-import { getSecretValue } from '../../utils/secretsmanager';
-import { rds as rdsConfig } from '../../config';
 import mysql2Driver from './drivers/mysql2';
 import pgDriver from './drivers/pg';
 const FILE = 'lesgo.services.RDSAuroraMySQLProxyService.getMySQLProxyClient';
 export const singleton = {};
 const poolHealthCheckLocks = {};
 const poolRecreationCounts = {};
-const MAX_POOL_CREATION_RETRIES = rdsConfig.aurora.mysql.maxPoolCreationRetries;
+const DEFAULT_maxRetries = 3;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const sanitizeForLogging = obj => {
   if (!obj) return obj;
@@ -67,56 +65,38 @@ const isPoolHealthy = pool =>
 const createAndStoreNewPool = (
   singletonConn,
   connOptions,
-  dbCredentialsSecretId,
-  region,
   databaseName,
   driver
 ) =>
   __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const dbCredentials = dbCredentialsSecretId
-      ? yield getSecretValue(dbCredentialsSecretId, undefined, {
-          region,
-          singletonConn,
-        })
-      : {};
     const driverImpl = resolveDriver(driver);
-    for (let attempt = 1; attempt <= MAX_POOL_CREATION_RETRIES; attempt++) {
+    const maxRetries =
+      Number(
+        connOptions === null || connOptions === void 0
+          ? void 0
+          : connOptions.maxPoolCreationRetries
+      ) || DEFAULT_maxRetries;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const connOpts = Object.assign(
-          {
-            host:
-              rdsConfig.aurora.mysql.proxy.host ||
-              (dbCredentials === null || dbCredentials === void 0
-                ? void 0
-                : dbCredentials.host),
-            database: databaseName,
-            port:
-              Number(
-                rdsConfig.aurora.mysql.proxy.port ||
-                  (dbCredentials === null || dbCredentials === void 0
-                    ? void 0
-                    : dbCredentials.port)
-              ) || undefined,
-            user:
-              (dbCredentials === null || dbCredentials === void 0
-                ? void 0
-                : dbCredentials.username) || rdsConfig.aurora.mysql.user,
-            password:
-              (dbCredentials === null || dbCredentials === void 0
-                ? void 0
-                : dbCredentials.password) || rdsConfig.aurora.mysql.password,
-            connectionLimit:
-              Number(rdsConfig.aurora.mysql.proxy.connectionLimit) || 10,
-            waitForConnections:
-              (_a = rdsConfig.aurora.mysql.proxy.waitForConnections) !== null &&
-              _a !== void 0
-                ? _a
-                : true,
-            queueLimit: Number(rdsConfig.aurora.mysql.proxy.queueLimit) || 0,
-          },
-          connOptions
-        );
+        const connOpts = Object.assign(Object.assign({}, connOptions), {
+          database:
+            databaseName ||
+            (connOptions === null || connOptions === void 0
+              ? void 0
+              : connOptions.database),
+        });
+        if (!connOpts.host) {
+          throw new Error(`${FILE}::HOST_NOT_PROVIDED`);
+        }
+        if (!connOpts.user) {
+          throw new Error(`${FILE}::USER_NOT_PROVIDED`);
+        }
+        if (!connOpts.password) {
+          throw new Error(`${FILE}::PASSWORD_NOT_PROVIDED`);
+        }
+        if (!connOpts.database) {
+          throw new Error(`${FILE}::DATABASE_NOT_PROVIDED`);
+        }
         logger.debug(`${FILE}::CONN_OPTS`, {
           connOpts: sanitizeForLogging(connOpts),
           connOptions: sanitizeForLogging(connOptions || {}),
@@ -137,14 +117,12 @@ const createAndStoreNewPool = (
           attempt,
           error: { trace: err },
         });
-        if (attempt < MAX_POOL_CREATION_RETRIES) {
+        if (attempt < maxRetries) {
           const delay = Math.min(1000, 100 * Math.pow(2, attempt - 1));
           logger.debug(`${FILE}::POOL_CREATION_BACKOFF`, { attempt, delay });
           yield sleep(delay);
         } else {
-          throw new Error(
-            `Failed to create pool after ${MAX_POOL_CREATION_RETRIES} attempts`
-          );
+          throw new Error(`Failed to create pool after ${maxRetries} attempts`);
         }
       }
     }
@@ -153,9 +131,7 @@ const createAndStoreNewPool = (
 const getClient = (connOptions, clientOpts) =>
   __awaiter(void 0, void 0, void 0, function* () {
     const options = validateFields(clientOpts || {}, [
-      { key: 'region', type: 'string', required: false },
       { key: 'singletonConn', type: 'string', required: false },
-      { key: 'dbCredentialsSecretId', type: 'string', required: false },
       { key: 'databaseName', type: 'string', required: false },
       { key: 'driver', type: 'string', required: false },
     ]);
@@ -164,20 +140,16 @@ const getClient = (connOptions, clientOpts) =>
       clientOpts: sanitizeForLogging(clientOpts || {}),
       options: sanitizeForLogging(options),
     });
-    const region = options.region || rdsConfig.aurora.mysql.region;
     const singletonConn = options.singletonConn || 'default';
-    const dbCredentialsSecretId =
-      options.dbCredentialsSecretId ||
-      rdsConfig.aurora.mysql.proxy.dbCredentialsSecretId;
     const databaseName =
-      options.databaseName || rdsConfig.aurora.mysql.databaseName;
+      options.databaseName ||
+      (connOptions === null || connOptions === void 0
+        ? void 0
+        : connOptions.database);
     const driver =
       (clientOpts === null || clientOpts === void 0
         ? void 0
         : clientOpts.driver) || 'mysql2';
-    if (!databaseName) {
-      throw new Error(`${FILE}::DATABASE_NAME_NOT_PROVIDED`);
-    }
     if (!isEmpty(singleton[singletonConn])) {
       if (!poolHealthCheckLocks[singletonConn]) {
         poolHealthCheckLocks[singletonConn] = (() =>
@@ -200,8 +172,6 @@ const getClient = (connOptions, clientOpts) =>
               return yield createAndStoreNewPool(
                 singletonConn,
                 connOptions,
-                dbCredentialsSecretId,
-                region,
                 databaseName,
                 driver
               );
@@ -222,8 +192,6 @@ const getClient = (connOptions, clientOpts) =>
     return yield createAndStoreNewPool(
       singletonConn,
       connOptions,
-      dbCredentialsSecretId,
-      region,
       databaseName,
       driver
     );

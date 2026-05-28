@@ -19,29 +19,23 @@ describe('getClient', () => {
 
   it('should call getMySQLProxyClient with the correct parameters', () => {
     const singletonConn = 'default';
-    const region = 'us-west-2';
 
-    getClient(connOptions, { singletonConn, region });
+    getClient(connOptions, { singletonConn });
 
     expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
     expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, {
       singletonConn,
-      region,
     });
   });
 
   it('should call getMySQLProxyClient with default connOptions, singletonConn if not provided', () => {
-    const region = 'us-west-2';
-
-    getClient(connOptions, { region });
+    getClient(connOptions, {});
 
     expect(getMySQLProxyClient).toHaveBeenCalledTimes(1);
-    expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, {
-      region,
-    });
+    expect(getMySQLProxyClient).toHaveBeenCalledWith(connOptions, {});
   });
 
-  it('should call getMySQLProxyClient with default connOptions, region if not provided', () => {
+  it('should call getMySQLProxyClient with default connOptions, driver if provided', () => {
     const singletonConn = 'default';
 
     getClient(connOptions, { singletonConn });

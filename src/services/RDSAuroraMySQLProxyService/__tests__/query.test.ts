@@ -19,8 +19,7 @@ describe('query', () => {
       database: 'test',
     };
     const clientOpts = {
-      region: 'us-west-2',
-      endpoint: 'http://localhost:8000',
+      singletonConn: 'test-conn',
     };
     const connectionMock = {
       query: jest.fn().mockResolvedValue([{ id: 1, name: 'John' }]),
@@ -57,8 +56,7 @@ describe('query', () => {
       database: 'test',
     };
     const clientOpts = {
-      region: 'us-west-2',
-      endpoint: 'http://localhost:8000',
+      singletonConn: 'test-conn',
     };
     const error = new Error('Query failed');
     const connectionMock = {

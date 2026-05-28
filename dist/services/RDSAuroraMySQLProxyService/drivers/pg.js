@@ -38,7 +38,10 @@ class PgPoolAdapter {
   }
   query(sql, values) {
     return __awaiter(this, void 0, void 0, function* () {
-      const result = yield this.pool.query(sql, values);
+      const result =
+        typeof sql === 'object'
+          ? yield this.pool.query(sql)
+          : yield this.pool.query(sql, values);
       return result.rows;
     });
   }

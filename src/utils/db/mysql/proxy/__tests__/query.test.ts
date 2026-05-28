@@ -18,13 +18,11 @@ describe('query', () => {
   it('should call queryService with the correct arguments', async () => {
     const sql = `SELECT * FROM table WHERE id = ?`;
     const preparedValues = [5];
-    const region = 'ap-southeast-1';
     const singletonConn = 'default';
 
     (queryService as jest.Mock).mockResolvedValueOnce([]);
 
     await query(sql, preparedValues, connOptions, {
-      region,
       singletonConn,
     });
 
@@ -33,7 +31,6 @@ describe('query', () => {
       preparedValues,
       connOptions,
       {
-        region,
         singletonConn,
       }
     );
